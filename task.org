@@ -1,0 +1,36 @@
+#+TITLE: Coding task
+#+AUTHOR: Shareablee
+#+OPTIONS: toc:nil num:nil
+
+* Overview
+
+The task is to create an app that will get popular Reddits using provided endpoint and create an output file with a specified structure.
+
+* Acceptance criteria
+
+** Create a Clojure project using Leiningen or Clojure deps.
+** Collect data reliably (network or api issues) from https://www.reddit.com/subreddits/popular/.json?limit=100
+** Partially validate the data against spec (malli or clojure.spec). It is sufficient to validate the fields that are exported to the output json files.
+** Write tests
+** Output data to json file
+
+* Output file format
+
+Example:
+#+begin_src json
+  {
+    "popular_reddits": [
+      {
+        "name": "r/Home",
+        "description": "Everything home related: interior design, home improvement, architecture...",
+        "created_at": "2009-01-25T03:25:57Z"
+      },
+      {
+        "name": "AskReddit",
+        "description": "###### [ [ SERIOUS ] ](http://www.reddit.com/r/askreddit/submit?selftext=true&amp;title=%5BSerious%5D)...",
+        "url": "https://reddit.com/r/AskReddit/",
+        "created_at": "2008-01-25T04:52:15Z"
+      }
+    ]
+  }
+#+end_src
