@@ -4,8 +4,6 @@
     [clojure.set :as set]
     [malli.util :as mu]))
 
-(declare api-configuration)
-
 ;; ** Infered schema
 
 #_
@@ -106,7 +104,7 @@
 
 (defn prepend-domain
   [url]
-  (str (:host api-configuration) url))
+  (str "https://www.reddit.com" url))
 
 (def extracted-fields
   [:display-name
@@ -114,19 +112,19 @@
    :created
    :url])
 
+(def fields-rename-schema
+  {:created      :created-at,
+   :display-name :name})
+
 (def extracted-subreddit-schema
   (->
     infered-subreddit-schema
     (mu/select-keys extracted-fields)
-    (mu/rename-keys {:created      :created-at,
-                     :display-name :name})
+    (mu/rename-keys fields-rename-schema)
     (mu/assoc :created-at inst?)
     (mu/update-properties assoc
                           :decode/string
                           {:enter #(-> %
-                                       (set/rename-keys
-                                         {:created      :created-at,
-                                          :display-name :name})
+                                       (set/rename-keys fields-rename-schema)
                                        (update :created-at sec->inst)
                                        (update :url prepend-domain))})))
-
