@@ -1,44 +1,52 @@
-(ns main.reddit-test
+;; * reddit.collector-test
+(ns reddit.collector-test
   (:require
     [clojure.test :refer [deftest is]]
-    [main.reddit :refer [resolve-route]]
-    [main.schema :refer
-     [create-response-schema extracted-subreddit-schema
+    [reddit.collector :refer [resolve-route]]
+    [reddit.api :as api]
+    [reddit.schema :refer
+     [wrap-in-response-schema extracted-subreddit-schema
       infered-subreddit-schema]]
     [malli.core :as m]
     [malli.generator :as mg]))
 
+;; ** Mocked resolvers
+
 (defn gen-resolver
   [_ _]
-  (mg/generate (create-response-schema infered-subreddit-schema)))
+  (mg/generate (wrap-in-response-schema infered-subreddit-schema)))
 
 (defn error-resolver [_ _] (throw (Exception. "Connection Error")))
 (defn wrong-response-resolver [_ _] {:kind 2})
 
+;; ** Tests
+
 (deftest parsing
-  (let [r (-> (resolve-route gen-resolver ::get-popular-subreddits {:limit 1}))]
+  (let [r (-> (resolve-route gen-resolver
+                             ::api/get-popular-subreddits
+                             {:limit 1}))]
     (is (m/validate [:map
                      [:popular-reddits
                       [:vector extracted-subreddit-schema]]]
-          r))))
+                    r))))
 
 (deftest params-validation
   (let [r (resolve-route gen-resolver
-                         ::get-popular-subreddits
+                         ::api/get-popular-subreddits
                          {:offset 1})]
     (is (= "missing required key"
            (get-in r [:error :details 0 :limit 0])))))
 
 (deftest response-validation
   (let [r (resolve-route wrong-response-resolver
-                         ::get-popular-subreddits
+                         ::api/get-popular-subreddits
                          {:limit 1})]
     (is (= :error.type/response-validation
            (get-in r [:error :type])))))
 
 (deftest api-error
   (let [r (resolve-route error-resolver
-                         ::get-popular-subreddits
+                         ::api/get-popular-subreddits
                          {:limit 1})]
     (is (= :error.type/api-error
            (get-in r [:error :type])))))

@@ -1,5 +1,5 @@
-;; * Main schema
-(ns main.schema
+;; * reddit.schema
+(ns reddit.schema
   (:require
     [clojure.set :as set]
     [malli.util :as mu]))
@@ -19,7 +19,7 @@
 
 (def infered-subreddit-schema
   [:map
-   [:created double?]
+   [:created {:gen/infinite? false} :double]
    [:description string?]
    [:url string?]
    [:display-name string?]
@@ -86,7 +86,7 @@
    [:primary-color string?] [:link-flair-position string?]
    [:user-flair-type string?] [:hide-ads boolean?]])
 
-(defn create-response-schema
+(defn wrap-in-response-schema
   [schema]
   [:map
    [:kind string?]
@@ -100,12 +100,6 @@
 
 ;; ** Internal schema
 
-(def extracted-fields
-  [:display-name
-   :description
-   :created
-   :url])
-
 (defn sec->inst
   [sec-num]
   (java.util.Date/from (java.time.Instant/ofEpochSecond sec-num)))
@@ -113,6 +107,12 @@
 (defn prepend-domain
   [url]
   (str (:host api-configuration) url))
+
+(def extracted-fields
+  [:display-name
+   :description
+   :created
+   :url])
 
 (def extracted-subreddit-schema
   (->
@@ -130,13 +130,3 @@
                                        (update :created-at sec->inst)
                                        (update :url prepend-domain))})))
 
-(def api-configuration
-  {:host      "https://www.reddit.com",
-   :endpoints
-     {:api/get-popular-subreddits
-        {:method       :get,
-         :path         "/subreddits/popular",
-         :malli/schema [:=>
-                        [:cat [:map [:limit pos-int?]]]
-                        (create-response-schema
-                          extracted-subreddit-schema)]}}})
